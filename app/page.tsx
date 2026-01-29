@@ -3,9 +3,11 @@
 import { useEffect, useState, useMemo } from "react";
 import {
   IconCheck,
-  IconLoader,
+  IconMinus,
   IconPencil,
   IconPlus,
+  IconSquare,
+  IconX,
 } from "@tabler/icons-react";
 import {
   initDB,
@@ -336,7 +338,37 @@ export default function Home() {
       {/* Sidebar */}
       <Sidebar variant="inset">
         <SidebarContent className="gap-0">
-          <div className="w-full h-6" style={{ WebkitAppRegion: 'drag' } as any} />
+          <div className="w-full min-h-6 flex items-center justify-start px-2" style={{ WebkitAppRegion: 'drag' } as any}>
+            <div />
+            {typeof window !== 'undefined' && (window as any).electron && (window as any).electron.platform === 'win32' && (
+              <div className="flex gap-1 pt-2" style={{ WebkitAppRegion: 'no-drag' } as any}>
+                <Button
+                  variant="destructive"
+                  size="xs"
+                  onClick={() => (window as any).electron.close()}
+                  title="Close"
+                >
+                  <IconX />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  onClick={() => (window as any).electron.maximize()}
+                  title="Maximize/Restore"
+                >
+                  <IconSquare />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  onClick={() => (window as any).electron.minimize()}
+                  title="Minimize"
+                >
+                  <IconMinus />
+                </Button>
+              </div>
+            )}
+          </div>
           <SidebarGroup className="p-1">
             <div className="flex items-center justify-between px-1 pb-4 pt-2">
               <h1 className="text-xl font-semibold">Task Tracker</h1>
@@ -444,8 +476,8 @@ export default function Home() {
                   value="analysis"
                   className="flex flex-1 flex-col gap-6 p-4"
                 >
-                  <Analytics 
-                    tasks={tasks} 
+                  <Analytics
+                    tasks={tasks}
                     completions={completions}
                     trackerCreatedAt={selectedTracker.createdAt}
                   />

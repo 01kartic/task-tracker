@@ -16,7 +16,7 @@ function createWindow() {
     icon: path.join(__dirname, "public/icons/icon.png"),
     frame: false,
     titleBarStyle: "hiddenInset",
-    trafficLightPosition: { x: 16, y: 12 },
+    trafficLightPosition: { x: 16, y: 14 },
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -75,5 +75,28 @@ app.whenReady().then(() => {
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
+  }
+});
+
+// IPC Handlers for window controls
+ipcMain.handle("window-minimize", () => {
+  if (mainWindow) {
+    mainWindow.minimize();
+  }
+});
+
+ipcMain.handle("window-maximize", () => {
+  if (mainWindow) {
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+    } else {
+      mainWindow.maximize();
+    }
+  }
+});
+
+ipcMain.handle("window-close", () => {
+  if (mainWindow) {
+    mainWindow.close();
   }
 });
