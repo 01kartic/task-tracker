@@ -10,7 +10,7 @@ View your productivity with interactive charts and statistics in the analytics d
 
 |System|Instruction|
 | --- | --- |
-|macOS|Download the latest `.dmg` file from the [Releases](https://github.com/kartic/task-tracker/releases) page.|
+|macOS|Download the latest `.dmg` file from the [Releases](https://github.com/01kartic/task-tracker/releases) page.|
 |Other|Will be released soon|
 
 ## Contributing

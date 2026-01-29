@@ -14,10 +14,6 @@ export const metadata: Metadata = {
     "task management",
   ],
   authors: [{ name: "Task Tracker" }],
-  icons: {
-    icon: "/icons/icon.png",
-    apple: "/icons/icon.png",
-  },
 };
 
 export default function RootLayout({

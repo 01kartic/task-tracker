@@ -43,6 +43,7 @@ next-env.d.ts
 
 #ai
 /skills
+.agent
 .agents
 .github
 .mcpjam

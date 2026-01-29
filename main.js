@@ -1,6 +1,5 @@
 const { app, BrowserWindow, ipcMain, Tray, Menu } = require("electron");
 const path = require("path");
-const notifier = require("node-notifier");
 const isDev = process.env.NODE_ENV === "development";
 
 let mainWindow;

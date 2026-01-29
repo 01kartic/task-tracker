@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
+  productionBrowserSourceMaps: false,
+  experimental: {
+    optimizePackageImports: ['@tabler/icons-react', 'recharts', 'date-fns'],
+  },
 };
 
 export default nextConfig;

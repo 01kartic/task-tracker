@@ -79,7 +79,7 @@ When creating commits, please follow these simple rules :
 - **Describe changes in detail** - In the commit description, explain what you changed and why
 - **Reference issues** - If applicable, reference related issues using `#issue-number`
 
-**Example:**
+**Example :**
 
 ```markdown
 Add export functionality to analytics

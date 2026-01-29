@@ -1,8 +1,13 @@
 {
   "name": "task-tracker",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
+  "license": "MIT",
   "main": "main.js",
+  "author": {
+    "name": "kartic",
+    "url": "https://twitter.com/01_kartic"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -19,17 +24,25 @@
   "build": {
     "appId": "com.kartic.tasktracker",
     "productName": "Task Tracker",
-    "copyright": "Copyright © 2026 Task Tracker",
+    "copyright": "Copyright © 2026 Kartic",
+    "asar": true,
+    "compression": "maximum",
     "files": [
       "out/**/*",
+      "!out/app-preview.png",
+      "!out/**/*.map",
+      "!out/**/*.txt",
+      "!out/_next/static/**/*.map",
+      "!out/icons/icon.icns",
       "main.js",
       "preload.js",
-      "node_modules/**/*",
       "package.json",
-      "public/icons/**/*"
+      "!node_modules/**/*"
     ],
+    "asarUnpack": [],
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "public"
     },
     "mac": {
       "target": "dmg",
@@ -48,15 +61,12 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",
-    "@radix-ui/react-slot": "^1.2.4",
     "@tabler/icons-react": "^3.36.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "lucide-react": "^0.563.0",
     "next": "16.1.5",
     "next-themes": "^0.4.6",
-    "node-notifier": "^10.0.1",
     "react": "19.2.3",
     "react-day-picker": "^9.13.0",
     "react-dom": "19.2.3",
