@@ -28,6 +28,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+import { ICONS, COLORS } from "@/components/ui/icon-picker";
 
 interface EditTrackerDialogProps {
   isOpen: boolean;
@@ -35,6 +36,8 @@ interface EditTrackerDialogProps {
   tracker: {
     id: string;
     name: string;
+    icon?: string;
+    color?: string;
   };
   existingTasks: Array<{ id: string; title: string }>;
   onAddTask: (title: string) => void;
@@ -67,12 +70,27 @@ export function EditTrackerDialog({
     onClose();
   };
 
+  // Get tracker icon component
+  const getTrackerIcon = () => {
+    const iconData = ICONS.find((icon) => icon.name === tracker.icon);
+    const colorData = COLORS.find((color) => color.value === tracker.color);
+
+    if (!iconData) return null;
+
+    const IconComponent = iconData.icon;
+    const color = colorData?.color !== "transparent" ? colorData?.color : undefined;
+
+    return <IconComponent className="h-5 w-5" style={{ color }} />;
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogPopup showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>
-            <span className="text-muted-foreground">Edit</span> {tracker.name}
+          <DialogTitle className="flex items-center gap-2">
+            <span className="text-muted-foreground">Edit</span>
+            {getTrackerIcon()}
+            <span>{tracker.name}</span>
           </DialogTitle>
         </DialogHeader>
 

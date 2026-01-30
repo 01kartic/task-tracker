@@ -13,11 +13,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { IconPicker } from "@/components/ui/icon-picker";
 
 interface CreateTrackerDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (name: string, tasks: string[]) => void;
+  onSubmit: (name: string, tasks: string[], icon?: string, color?: string) => void;
 }
 
 export function CreateTrackerDialog({
@@ -27,6 +28,8 @@ export function CreateTrackerDialog({
 }: CreateTrackerDialogProps) {
   const [trackerName, setTrackerName] = useState("");
   const [tasks, setTasks] = useState<string[]>([""]);
+  const [selectedColor, setSelectedColor] = useState("none");
+  const [selectedIcon, setSelectedIcon] = useState<string>();
 
   if (!isOpen) return null;
 
@@ -47,9 +50,16 @@ export function CreateTrackerDialog({
   const handleSubmit = () => {
     const validTasks = tasks.filter((t) => t.trim() !== "");
     if (trackerName.trim() && validTasks.length > 0) {
-      onSubmit(trackerName.trim(), validTasks);
+      onSubmit(
+        trackerName.trim(),
+        validTasks,
+        selectedIcon,
+        selectedColor !== "none" ? selectedColor : undefined
+      );
       setTrackerName("");
       setTasks([""]);
+      setSelectedColor("none");
+      setSelectedIcon(undefined);
       onClose();
     }
   };
@@ -65,13 +75,21 @@ export function CreateTrackerDialog({
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="tracker-name">Tracker Name</Label>
-              <Input
-                id="tracker-name"
-                type="text"
-                value={trackerName}
-                onChange={(e) => setTrackerName(e.target.value)}
-                placeholder="e.g., Daily Habits"
-              />
+              <div className="flex items-center gap-2">
+                <IconPicker
+                  selectedColor={selectedColor}
+                  selectedIcon={selectedIcon}
+                  onColorChange={setSelectedColor}
+                  onIconChange={setSelectedIcon}
+                />
+                <Input
+                  id="tracker-name"
+                  type="text"
+                  value={trackerName}
+                  onChange={(e) => setTrackerName(e.target.value)}
+                  placeholder="e.g., Daily Habits"
+                />
+              </div>
             </div>
 
             <div className="space-y-2">

@@ -2,6 +2,8 @@ export interface Tracker {
   id: string;
   name: string;
   createdAt: number;
+  icon?: string, 
+  color?: string
 }
 
 export interface Task {

@@ -56,6 +56,23 @@ import {
 } from "@/components/ui/empty";
 import { ThemeToggle } from "@/components/theme-provider";
 import { Spinner } from "@/components/ui/spinner";
+import { ICONS, COLORS } from "@/components/ui/icon-picker";
+
+
+
+// Helper function to get tracker icon
+function getTrackerIcon(tracker: Tracker) {
+  const iconData = ICONS.find((icon) => icon.name === tracker.icon);
+  const colorData = COLORS.find((color) => color.value === tracker.color);
+
+  if (!iconData) return null;
+
+  const IconComponent = iconData.icon;
+  const color = colorData?.color !== "transparent" ? colorData?.color : undefined;
+
+  return <IconComponent className="h-4 w-4" style={{ color }} />;
+}
+
 
 export default function Home() {
   const [trackers, setTrackers] = useState<Tracker[]>([]);
@@ -164,12 +181,14 @@ export default function Home() {
   }, [tasks, completions]);
 
   // Handle create tracker
-  const handleCreateTracker = async (name: string, taskTitles: string[]) => {
+  const handleCreateTracker = async (name: string, taskTitles: string[], icon?: string, color?: string) => {
     try {
       const tracker: Tracker = {
         id: `tracker-${Date.now()}`,
         name,
         createdAt: Date.now(),
+        icon,
+        color,
       };
 
       await addTracker(tracker);
@@ -393,7 +412,8 @@ export default function Home() {
                         onClick={() => setSelectedTracker(tracker)}
                         isActive={selectedTracker?.id === tracker.id}
                       >
-                        {tracker.name}
+                        {getTrackerIcon(tracker)}
+                        <span>{tracker.name}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))
