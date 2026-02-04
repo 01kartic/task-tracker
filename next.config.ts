@@ -8,9 +8,13 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   productionBrowserSourceMaps: false,
-  experimental: {
-    optimizePackageImports: ['@tabler/icons-react', 'recharts', 'date-fns'],
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
   },
+  experimental: {
+    optimizePackageImports: ['@tabler/icons-react', 'recharts', 'date-fns', 'react-day-picker'],
+  },
+  compress: true,
 };
 
 export default nextConfig;
