@@ -20,8 +20,17 @@ export interface TaskCompletion {
   rating: number; // 0-5 with 0.5 increments
 }
 
+export interface NotificationLog {
+  id: string;
+  trackerId: string;
+  type: 'reminder' | 'completion';
+  sentAt: number; // timestamp
+  date: string; // YYYY-MM-DD format
+  tasksRemaining?: number;
+}
+
 const DB_NAME = 'TaskTrackerDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let db: IDBDatabase | null = null;
 
@@ -58,6 +67,15 @@ export async function initDB(): Promise<IDBDatabase> {
         completionStore.createIndex('trackerId', 'trackerId', { unique: false });
         completionStore.createIndex('date', 'date', { unique: false });
         completionStore.createIndex('trackerDate', ['trackerId', 'date'], { unique: false });
+      }
+
+      // Create notification logs store
+      if (!database.objectStoreNames.contains('notificationLogs')) {
+        const logStore = database.createObjectStore('notificationLogs', { keyPath: 'id' });
+        logStore.createIndex('trackerId', 'trackerId', { unique: false });
+        logStore.createIndex('date', 'date', { unique: false });
+        logStore.createIndex('trackerDate', ['trackerId', 'date'], { unique: false });
+        logStore.createIndex('sentAt', 'sentAt', { unique: false });
       }
     };
   });
@@ -290,4 +308,64 @@ export function formatDate(date: Date): string {
 // Helper function to get today's date string
 export function getTodayDateString(): string {
   return formatDate(new Date());
+}
+
+// Notification log operations
+export async function addNotificationLog(log: NotificationLog): Promise<void> {
+  const database = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(['notificationLogs'], 'readwrite');
+    const store = transaction.objectStore('notificationLogs');
+    const request = store.add(log);
+
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function getNotificationLogsByDate(date: string): Promise<NotificationLog[]> {
+  const database = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(['notificationLogs'], 'readonly');
+    const store = transaction.objectStore('notificationLogs');
+    const index = store.index('date');
+    const request = index.getAll(IDBKeyRange.only(date));
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function getNotificationLogByTrackerAndDate(
+  trackerId: string,
+  date: string,
+  type: 'reminder' | 'completion'
+): Promise<NotificationLog | undefined> {
+  const database = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(['notificationLogs'], 'readonly');
+    const store = transaction.objectStore('notificationLogs');
+    const index = store.index('trackerDate');
+    const request = index.getAll(IDBKeyRange.only([trackerId, date]));
+
+    request.onsuccess = () => {
+      const logs = request.result.filter(log => log.type === type);
+      resolve(logs[logs.length - 1]); // Return most recent log
+    };
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function clearOldNotificationLogs(): Promise<void> {
+  const database = await initDB();
+  return new Promise((resolve, reject) => {
+    const transaction = database.transaction(['notificationLogs'], 'readwrite');
+    const store = transaction.objectStore('notificationLogs');
+    
+    // Clear all notification logs (will be called every weekend)
+    const request = store.clear();
+
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
 }

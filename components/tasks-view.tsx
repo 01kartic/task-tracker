@@ -10,7 +10,6 @@ import {
 import { Calendar, CalendarDayButton } from "@/components/ui/calendar";
 import type { Task, TaskCompletion } from "@/lib/db";
 import { getTodayDateString } from "@/lib/db";
-import { Progress } from "./ui/progress";
 import { Button } from "./ui/button";
 import {
   NativeSelect,

@@ -102,7 +102,6 @@ export function Analytics({
 
   const avgCompletionRate = useMemo(() => {
     if (analytics.length === 0) return 0;
-    console.log(analytics);
     const sum = analytics.reduce((acc, day) => acc + day.completionRate, 0);
     return sum / analytics.length;
   }, [analytics]);
@@ -186,7 +185,7 @@ export function Analytics({
               </EmptyHeader>
             </Empty>
           ) : (
-            <ChartContainer config={chartConfig}>
+            <ChartContainer config={chartConfig} className="[&>div]:h-fit [&>div]:flex [&>div]:justify-center">
               <LineChart
                 accessibilityLayer
                 data={chartData}
@@ -194,6 +193,9 @@ export function Analytics({
                   top: 12,
                   left: 12,
                   right: 12,
+                }}
+                style={{
+                  maxWidth: 600,
                 }}
               >
                 <CartesianGrid vertical={false} />

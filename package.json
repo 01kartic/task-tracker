@@ -1,6 +1,6 @@
 {
   "name": "task-tracker",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "license": "MIT",
   "main": "main.js",
@@ -27,17 +27,24 @@
     "copyright": "Copyright © 2026 Kartic",
     "asar": true,
     "compression": "maximum",
+    "removePackageScripts": true,
     "files": [
       "out/**/*",
       "!out/app-preview.png",
       "!out/**/*.map",
       "!out/**/*.txt",
       "!out/_next/static/**/*.map",
+      "!out/_next/static/chunks/**/*.map",
       "!out/icons/icon.icns",
+      "!out/**/*.LICENSE.txt",
       "main.js",
       "preload.js",
       "package.json",
-      "!node_modules/**/*"
+      "!node_modules/**/*",
+      "!**/*.md",
+      "!**/.git*",
+      "!**/README*",
+      "!**/CHANGELOG*"
     ],
     "asarUnpack": [],
     "directories": {
@@ -70,6 +77,7 @@
     "react": "19.2.3",
     "react-day-picker": "^9.13.0",
     "react-dom": "19.2.3",
+    "react-window": "^2.2.5",
     "recharts": "^2.15.4",
     "tailwind-merge": "^3.4.0"
   },
@@ -78,6 +86,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/react-window": "^1.8.8",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "electron": "^40.0.0",

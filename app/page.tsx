@@ -1,14 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import {
-  IconCheck,
-  IconMinus,
-  IconPencil,
-  IconPlus,
-  IconSquare,
-  IconX,
-} from "@tabler/icons-react";
+import * as Icons from "@tabler/icons-react";
 import {
   initDB,
   getAllTrackers,
@@ -18,13 +11,36 @@ import {
   addTask,
   deleteTask,
   deleteTracker,
+  updateTracker,
   setTaskCompletion,
-  type Tracker,
-  type Task,
-  type TaskCompletion,
 } from "@/lib/db";
+
+type Tracker = {
+  id: string;
+  name: string;
+  icon?: {
+    icon?: string;
+    emoji?: string;
+    color?: string;
+  } | null;
+  createdAt: number;
+};
+type Task = {
+  id: string;
+  trackerId: string;
+  title: string;
+  createdAt: number;
+};
+type TaskCompletion = {
+  id: string;
+  taskId: string;
+  trackerId: string;
+  date: string;
+  completed: boolean;
+  rating: number;
+};
 import {
-  updateNotificationTracker,
+  updateNotificationState,
   requestNotificationPermission,
   sendNotification,
 } from "@/lib/notifications";
@@ -45,6 +61,7 @@ import {
   SidebarProvider,
   SidebarInset,
   SidebarFooter,
+  SidebarMenuBadge,
 } from "@/components/ui/sidebar";
 import {
   Empty,
@@ -56,6 +73,8 @@ import {
 } from "@/components/ui/empty";
 import { ThemeToggle } from "@/components/theme-provider";
 import { Spinner } from "@/components/ui/spinner";
+import { createIconName } from "@/components/icon-picker/picker";
+import { Switch } from "@/components/ui/switch";
 
 export default function Home() {
   const [trackers, setTrackers] = useState<Tracker[]>([]);
@@ -66,6 +85,7 @@ export default function Home() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   // Initialize DB and load data
   useEffect(() => {
@@ -73,7 +93,19 @@ export default function Home() {
       try {
         await initDB();
         await loadTrackers();
+        
+        // Load notification preference from localStorage
+        const savedPref = localStorage.getItem('notificationsEnabled');
+        const enabled = savedPref !== null ? savedPref === 'true' : true;
+        setNotificationsEnabled(enabled);
+        
+        // Request permission on first use
         await requestNotificationPermission();
+        
+        // Start notification system if enabled
+        if (enabled) {
+          updateNotificationState(true);
+        }
       } catch (error) {
         console.error("Failed to initialize:", error);
       } finally {
@@ -109,8 +141,6 @@ export default function Home() {
           selectedTracker.id,
         );
         setCompletions(allCompletions);
-
-        updateNotificationTracker(selectedTracker.id);
       } catch (error) {
         console.error("Failed to load data:", error);
       }
@@ -164,21 +194,28 @@ export default function Home() {
   }, [tasks, completions]);
 
   // Handle create tracker
-  const handleCreateTracker = async (name: string, taskTitles: string[]) => {
+  const handleCreateTracker = async (
+    name: string,
+    taskTitles: string[],
+    icon: { icon?: string; emoji?: string; color?: string } | null,
+  ) => {
     try {
       const tracker: Tracker = {
         id: `tracker-${Date.now()}`,
         name,
+        icon: icon ?? null,
         createdAt: Date.now(),
       };
 
       await addTracker(tracker);
 
-      sendNotification({
-        title: "Tracker Created",
-        body: `New tracker "${name}" has been created with ${taskTitles.length} tasks.`,
-        trackerId: tracker.id,
-      });
+      if (notificationsEnabled) {
+        sendNotification({
+          title: "Tracker Created",
+          body: `New tracker "${name}" has been created with ${taskTitles.length} tasks.`,
+          trackerId: tracker.id,
+        });
+      }
 
       const now = Date.now();
       for (const title of taskTitles) {
@@ -234,8 +271,8 @@ export default function Home() {
   // Handle delete tracker
   const handleDeleteTracker = async (trackerId: string) => {
     try {
-      const trackerToDelete = trackers.find(t => t.id === trackerId);
-      if (trackerToDelete) {
+      const trackerToDelete = trackers.find((t) => t.id === trackerId);
+      if (trackerToDelete && notificationsEnabled) {
         sendNotification({
           title: "Tracker Deleted",
           body: `Tracker "${trackerToDelete.name}" has been deleted.`,
@@ -253,6 +290,33 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Failed to delete tracker:", error);
+    }
+  };
+
+  // Handle update tracker
+  const handleUpdateTracker = async (updates: { name?: string; icon?: { icon?: string; emoji?: string; color?: string } | null }) => {
+    if (!selectedTracker) return;
+
+    try {
+      const updatedTracker: Tracker = {
+        ...selectedTracker,
+        ...(updates.name && { name: updates.name }),
+        ...(updates.icon !== undefined && { icon: updates.icon }),
+      };
+
+      await updateTracker(updatedTracker);
+      await loadTrackers();
+      setSelectedTracker(updatedTracker);
+
+      if (notificationsEnabled) {
+        sendNotification({
+          title: "Tracker Updated",
+          body: `Tracker "${updatedTracker.name}" has been updated.`,
+          trackerId: updatedTracker.id,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to update tracker:", error);
     }
   };
 
@@ -276,7 +340,7 @@ export default function Home() {
         trackerId: selectedTracker.id,
         date: date,
         completed: newCompleted,
-        rating: newCompleted ? (existingCompletion?.rating || 0) : 0,
+        rating: newCompleted ? existingCompletion?.rating || 0 : 0,
       };
 
       await setTaskCompletion(completion);
@@ -325,6 +389,33 @@ export default function Home() {
     }
   };
 
+  // Handle notification toggle
+  const handleNotificationToggle = async (checked: boolean) => {
+    if (!checked) {
+      // Send notification BEFORE disabling
+      sendNotification({
+        title: "Notifications Off",
+        body: "You will no longer receive task reminders.",
+      });
+    }
+    
+    setNotificationsEnabled(checked);
+    localStorage.setItem('notificationsEnabled', String(checked));
+    
+    // Update notification system state
+    updateNotificationState(checked);
+    
+    if (checked) {
+      // Request permission if not already granted
+      await requestNotificationPermission();
+      // Send notification AFTER enabling
+      sendNotification({
+        title: "Notifications On",
+        body: "You will now receive task reminders for all trackers.",
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center w-full h-dvh">
@@ -338,36 +429,47 @@ export default function Home() {
       {/* Sidebar */}
       <Sidebar variant="inset">
         <SidebarContent className="gap-0">
-          <div className="w-full min-h-6 flex items-center justify-start px-2" style={{ WebkitAppRegion: 'drag' } as any}>
+          <div
+            className="w-full min-h-6 flex items-center justify-start px-2"
+            style={{ WebkitAppRegion: "drag" } as any}
+          >
             <div />
-            {typeof window !== 'undefined' && (window as any).electron && (window as any).electron.platform === 'win32' && (
-              <div className="flex gap-1 pt-2" style={{ WebkitAppRegion: 'no-drag' } as any}>
-                <Button
-                  variant="destructive"
-                  size="xs"
-                  onClick={() => (window as any).electron.close()}
-                  title="Close"
+            {typeof window !== "undefined" &&
+              (window as any).electron &&
+              (window as any).electron.platform === "win32" && (
+                <div
+                  className="flex gap-1 pt-2"
+                  style={{ WebkitAppRegion: "no-drag" } as any}
                 >
-                  <IconX />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  onClick={() => (window as any).electron.maximize()}
-                  title="Maximize/Restore"
-                >
-                  <IconSquare />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  onClick={() => (window as any).electron.minimize()}
-                  title="Minimize"
-                >
-                  <IconMinus />
-                </Button>
-              </div>
-            )}
+                  <Button
+                    variant="destructive"
+                    size="xs"
+                    onClick={() => {
+                      (window as any).electron.notifyBeforeClose(notificationsEnabled);
+                      setTimeout(() => (window as any).electron.close(), 100);
+                    }}
+                    title="Close"
+                  >
+                    <Icons.IconX />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    onClick={() => (window as any).electron.maximize()}
+                    title="Maximize/Restore"
+                  >
+                    <Icons.IconSquare />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    onClick={() => (window as any).electron.minimize()}
+                    title="Minimize"
+                  >
+                    <Icons.IconMinus />
+                  </Button>
+                </div>
+              )}
           </div>
           <SidebarGroup className="p-1">
             <div className="flex items-center justify-between px-1 pb-4 pt-2">
@@ -377,7 +479,7 @@ export default function Home() {
                 variant="outline"
                 size="icon-sm"
               >
-                <IconPlus />
+                <Icons.IconPlus />
               </Button>
             </div>
             <SidebarGroupContent>
@@ -393,6 +495,18 @@ export default function Home() {
                         onClick={() => setSelectedTracker(tracker)}
                         isActive={selectedTracker?.id === tracker.id}
                       >
+                        {tracker.icon?.emoji ? (
+                          <span className="text-xl leading-none">{tracker.icon.emoji}</span>
+                        ) : tracker.icon?.icon ? (
+                          (() => {
+                            const IconComp = (Icons as any)[
+                              createIconName(tracker.icon.icon)
+                            ];
+                            return (
+                              <IconComp className="size-5" style={{ color: tracker.icon.color }} />
+                            );
+                          })()
+                        ) : null}
                         {tracker.name}
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -404,6 +518,15 @@ export default function Home() {
         </SidebarContent>
         <SidebarFooter>
           <SidebarMenu>
+            <SidebarMenuItem>
+                <SidebarMenuButton className="cursor-pointer" onClick={() => handleNotificationToggle(!notificationsEnabled)}>Send Notifications</SidebarMenuButton>
+                <SidebarMenuBadge className="w-fit right-2">
+                  <Switch 
+                    className="[--thumb-size:14px]!" 
+                    checked={notificationsEnabled}
+                  />
+                </SidebarMenuBadge>
+            </SidebarMenuItem>
             <ThemeToggle />
           </SidebarMenu>
         </SidebarFooter>
@@ -415,7 +538,7 @@ export default function Home() {
           <Empty>
             <EmptyHeader>
               <EmptyMedia variant="icon">
-                <IconCheck />
+                <Icons.IconCheck />
               </EmptyMedia>
               <EmptyTitle>No Tracker Selected</EmptyTitle>
               <EmptyDescription>
@@ -428,7 +551,7 @@ export default function Home() {
                 variant="default"
                 size="default"
               >
-                <IconPlus />
+                <Icons.IconPlus />
                 Create Tracker
               </Button>
             </EmptyContent>
@@ -451,7 +574,7 @@ export default function Home() {
                   variant="default"
                   size="default"
                 >
-                  <IconPencil />
+                  <Icons.IconPencil />
                   Edit
                 </Button>
               </div>
@@ -504,6 +627,7 @@ export default function Home() {
           onAddTask={handleAddTask}
           onDeleteTask={handleDeleteTask}
           onDeleteTracker={handleDeleteTracker}
+          onUpdateTracker={handleUpdateTracker}
         />
       )}
     </SidebarProvider>
