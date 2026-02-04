@@ -40,13 +40,16 @@
       "main.js",
       "preload.js",
       "package.json",
+      "public/icons/**/*",
       "!node_modules/**/*",
       "!**/*.md",
       "!**/.git*",
       "!**/README*",
       "!**/CHANGELOG*"
     ],
-    "asarUnpack": [],
+    "asarUnpack": [
+      "public/icons/**/*"
+    ],
     "directories": {
       "output": "dist",
       "buildResources": "public"
